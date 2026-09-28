@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Protótipo - Certificado de Descontaminação (MAJOPAU)</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 15px; background-color: #f4f4f9; font-size: 12px; }
+        .container { max-width: 950px; background: white; padding: 20px; border: 1px solid #ccc; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
+        .header h2 { margin: 2px 0; color: #b30000; }
+        .info-header { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; font-size: 13px; }
+        .section-title { background: #e6e6e6; padding: 4px; font-weight: bold; margin-top: 12px; text-align: center; border: 1px solid #999; font-size: 11px; text-transform: uppercase; }
+        .field-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+        .field { flex: 1; min-width: 170px; display: flex; flex-direction: column; }
+        .field label { font-size: 10px; font-weight: bold; margin-bottom: 2px; text-transform: uppercase; }
+        .field input, .field select { padding: 5px; font-size: 12px; border: 1px solid #ccc; border-radius: 3px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px; }
+        table, th, td { border: 1px solid #666; text-align: center; padding: 3px; }
+        th { background: #f0f0f0; font-size: 10px; }
+        td input { width: 92%; padding: 2px; border: 1px solid #ddd; text-align: center; font-size: 11px; }
+        
+        .notes-block { margin-top: 10px; font-size: 10px; text-align: justify; line-height: 1.3; }
+        .notes-block ol { margin: 3px 0; padding-left: 18px; }
+        .notes-block li { margin-bottom: 2px; }
+
+        .footer-signatures { display: flex; justify-content: space-between; margin-top: 30px; text-align: center; font-size: 10px; }
+        .sig-line { border-top: 1px solid #000; width: 30%; padding-top: 4px; }
+        
+        .controls { max-width: 950px; margin: 0 auto 10px auto; display: flex; justify-content: space-between; align-items: center; }
+        .btn { padding: 8px 15px; background: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn:hover { background: #003d80; }
+        
+        @media print { 
+            .controls { display: none; } 
+            body { background: white; margin: 0; } 
+            .container { box-shadow: none; border: none; width: 100%; padding: 0; }
+            input, select { border: none !important; background: transparent !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="controls">
+    <div>
+        <label><b>Selecione o Registro (1 a 10):</b> </label>
+        <select id="registroSelect" onchange="carregarRegistro(this.value)">
+            <!-- Opções geradas via JS -->
+        </select>
+    </div>
+    <button class="btn" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+</div>
+
+<div class="container">
+    <!-- CABEÇALHO -->
+    <div class="header">
+        <h2>MAJOPAU TRANSPORTES DE COMBUSTÍVEIS LTDA</h2>
+        <p style="margin: 2px 0;">Rod. Governador Mario Covas, 517, KM 291, Nova Valverde, Cariacica, ES - CEP: 29.151-815<br>
+        CNPJ: 06.127.018/0001-35 | Fone/Fax: (27) 99997-4786</p>
+    </div>
+
+    <div class="info-header">
+        <div>Código do registro: <span id="codRegistro">10577-2022</span></div>
+        <div style="color: #b30000;">CERTIFICADO DE DESCONTAMINAÇÃO <span id="numCertificado">MPJ00004293/2026</span></div>
+    </div>
+
+    <!-- DADOS DO CLIENTE E VEÍCULO -->
+    <div class="section-title">DADOS DO CLIENTE E DO VEÍCULO</div>
+    <div class="field-group">
+        <div class="field" style="flex: 2;">
+            <label>Razão Social / Nome do Cliente:</label>
+            <input type="text" id="razaoSocial" value="TRANSPORTADORA CONTATTO LTDA">
+        </div>
+        <div class="field">
+            <label>Nº Equipamento:</label>
+            <input type="text" id="numEquipamento" value="1327041">
+        </div>
+        <div class="field">
+            <label>Placa do Veículo:</label>
+            <input type="text" id="placa" value="ELB-7C93">
+        </div>
+        <div class="field">
+            <label>Data de Emissão:</label>
+            <input type="date" id="dataCertificado">
+        </div>
+    </div>
+
+    <!-- CADASTRO DO CONDUTOR (NOVO) -->
+    <div class="field-group" style="margin-top: 5px;">
+        <div class="field" style="flex: 2;">
+            <label>Nome do Condutor do Veículo:</label>
+            <input type="text" id="nomeCondutor" value="EIDER SANTOS DE CARVALHO" oninput="sincronizarCondutor()">
+        </div>
+        <div class="field">
+            <label>CPF do Condutor:</label>
+            <input type="text" id="cpfCondutor" value="787.681.872-20" oninput="sincronizarCondutor()">
+        </div>
+    </div>
+
+    <!-- FINALIDADE E PROCESSO -->
+    <div class="section-title">FINALIDADE & PROCESSO DE DESCONTAMINAÇÃO</div>
+    <div class="field-group" style="align-items: center;">
+        <div class="field" style="flex: 2;">
+            <label>Finalidade da Descontaminação:</label>
+            <div style="display: flex; gap: 6px; align-items: center; margin-top: 2px;">
+                <select id="selectFinalidade" onchange="toggleOutrosField(this.value)">
+                    <option value="Capacitação (CIPP)">Capacitação (CIPP)</option>
+                    <option value="Manutenção">Manutenção</option>
+                    <option value="Reparo">Reparo</option>
+                    <option value="Reforma">Reforma</option>
+                    <option value="Verificação Metrológica">Verificação Metrológica</option>
+                    <option value="Outros" selected>Outros</option>
+                </select>
+                <input type="text" id="finalidadeOutros" value="DESCONTAMINAÇÃO">
+            </div>
+        </div>
+        <div class="field" style="flex: 2;">
+            <label>Processo de Descontaminação Aplicado:</label>
+            <input type="text" id="processoDescontaminacao" value="Com Ventilação Forçada e Água">
+        </div>
+    </div>
+    <p style="font-size: 10px; font-weight: bold; margin: 4px 0 0 0;">PRAZO DE VALIDADE DO SERVIÇO DE DESCONTAMINAÇÃO: 24:00 HORAS.</p>
+
+    <!-- TABELA DE COMPARTIMENTOS -->
+    <div class="section-title">DETALHES DOS COMPARTIMENTOS</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Item / Dados</th>
+                <th>1º Comp.</th><th>2º Comp.</th><th>3º Comp.</th><th>4º Comp.</th>
+                <th>5º Comp.</th><th>6º Comp.</th><th>7º Comp.</th><th>8º Comp.</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><b>Volume (Litros)</b></td>
+                <td><input type="text" value="26.000"></td>
+                <td><input type="text" value="-"></td><td><input type="text" value="-"></td><td><input type="text" value="-"></td>
+                <td><input type="text" value="-"></td><td><input type="text" value="-"></td><td><input type="text" value="-"></td><td><input type="text" value="-"></td>
+            </tr>
+            <tr>
+                <td><b>Produto Transportado</b></td>
+                <td><input type="text" value="4A"></td>
+                <td><input type="text" value="-"></td><td><input type="text" value="-"></td><td><input type="text" value="-"></td>
+                <td><input type="text" value="-"></td><td><input type="text" value="-"></td><td><input type="text" value="-"></td><td><input type="text" value="-"></td>
+            </tr>
+            <tr>
+                <td><b>Nº ONU</b></td>
+                <td><input type="text" value="1824"></td>
+                <td><input type="text" value="-"></td><td><input type="text" value="-"></td><td><input type="text" value="-"></td>
+                <td><input type="text" value="-"></td><td><input type="text" value="-"></td><td><input type="text" value="-"></td><td><input type="text" value="-"></td>
+            </tr>
+            <tr>
+                <td><b>Classe de Risco</b></td>
+                <td><input type="text" value="8"></td>
+                <td><input type="text" value="-"></td><td><input type="text" value="-"></td><td><input type="text" value="-"></td>
+                <td><input type="text" value="-"></td><td><input type="text" value="-"></td><td><input type="text" value="-"></td><td><input type="text" value="-"></td>
+            </tr>
+            <tr>
+                <td><b>Vazão de Ar (l/min)</b></td>
+                <td><input type="text" value="1200"></td>
+                <td><input type="text" value="1200"></td><td><input type="text" value="1200"></td><td><input type="text" value="1200"></td>
+                <td><input type="text" value="1200"></td><td><input type="text" value="1200"></td><td><input type="text" value="1200"></td><td><input type="text" value="1200"></td>
+            </tr>
+            <tr>
+                <td><b>Tempo (Hora/Min)</b></td>
+                <td><input type="text" value="1 HORA"></td>
+                <td><input type="text" value="1 HORA"></td><td><input type="text" value="1 HORA"></td><td><input type="text" value="1 HORA"></td>
+                <td><input type="text" value="1 HORA"></td><td><input type="text" value="1 HORA"></td><td><input type="text" value="1 HORA"></td><td><input type="text" value="1 HORA"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- EQUIPAMENTOS E CONTROLE TÉCNICO -->
+    <div class="section-title">DISPOSITIVOS DE SEGURANÇA & PARÂMETROS TÉCNICOS</div>
+    <div class="field-group">
+        <div class="field">
+            <label>Possui Lacre?</label>
+            <select id="selectLacre" onchange="toggleLacreNum(this.value)">
+                <option value="Não" selected>Não</option>
+                <option value="Sim">Sim</option>
+            </select>
+        </div>
+        <div class="field" id="fieldNumLacre" style="display: none; flex: 1.5;">
+            <label>Nº do Lacre:</label>
+            <input type="text" id="numLacre" value="">
+        </div>
+        <div class="field" style="flex: 1.5;">
+            <label>Detector de Gases (Nº Série):</label>
+            <input type="text" id="detectorGas" value="C2260031016">
+        </div>
+        <div class="field">
+            <label>Data ÚLTIMA Calibração:</label>
+            <input type="date" id="dataCalibracao" value="2025-06-02">
+        </div>
+        <div class="field">
+            <label>Regulamentação Aplicável:</label>
+            <input type="text" id="regTecnica" value="PORT 445">
+        </div>
+        <div class="field">
+            <label>Procedimento Aplicável:</label>
+            <input type="text" id="procAplicado" value="PT 001">
+        </div>
+    </div>
+
+    <!-- APROVAÇÃO, OBSERVAÇÕES E NOTAS -->
+    <div class="section-title">APROVAÇÃO & OBSERVAÇÕES</div>
+    <div style="margin-top: 6px; font-size: 11px;">
+        <p style="margin: 3px 0;"><b>APROVAÇÃO:</b> O equipamento acima identificado foi descontaminado indicando 0% do limite inferior de explosividade e dentro dos limites toleráveis de oxigênio para o acesso de pessoas ao interior do mesmo, com a devida segurança.</p>
+        
+        <div style="margin-top: 5px; background: #fafafa; padding: 5px; border: 1px solid #ddd;">
+            <b>OBSERVAÇÕES:</b> NÃO ESTÁ APTO A ARMAZENAR E TRANSPORTAR ÁGUA POTÁVEL. FAVOR EXECUTAR O SERVIÇO NO MESMO DIA EM QUE FOI REALIZADA A DESCONTAMINAÇÃO. 
+            <div style="display: inline-flex; align-items: center; gap: 5px; margin-left: 5px;">
+                <b>HORÁRIO DO INÍCIO DA DESCONTAMINAÇÃO:</b>
+                <input type="text" id="horaInicio" value="13:00 HORAS" style="width: 110px; font-weight: bold; padding: 2px;">
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTAS PADRÃO -->
+    <div class="notes-block">
+        <b>Notas:</b>
+        <ol type="a">
+            <li>Não nos responsabilizamos por serviços realizados por terceiros nos equipamentos descontaminados por nossa empresa.</li>
+            <li>Ocorrendo um intervalo de tempo entre a emissão deste certificado e a realização do serviço, deverão ser feitas novas medições da concentração de vapores inflamáveis e de oxigênio, imediatamente, antes de se iniciarem ou reiniciarem trabalhos a quente ou de soldas na parte interna ou externa do equipamento, devido à possibilidade de ocorrer nova gaseificação em função de condições ambientais e desgaseificação insuficiente.</li>
+            <li>Equipamentos que possuem acessórios acoplados para carga e descarga como: mangueiras, medidor de vazão e outros deverão ser retirados para execução de serviços a quente ou de soldas, para não serem danificados, uma vez que não foram descontaminados.</li>
+            <li>Não nos responsabilizaremos caso o produto perigoso a ser carregado no equipamento seja contaminado, devido aos serviços realizados por terceiros, posteriormente a descontaminação.</li>
+            <li>1º Via - Cliente – 2º Via – IPEM ou INMETRO – 3º Via – Arquivo - 4º Via. OIA-PP</li>
+        </ol>
+        <p style="text-align: center; font-weight: bold; margin-top: 6px;">Equipamento descontaminado em conformidade com a Portaria Inmetro 445, de 26 de outubro de 2021.</p>
+    </div>
+
+    <!-- ASSINATURAS -->
+    <div class="footer-signatures">
+        <div class="sig-line">
+            <b>PAULO ROBERTO M. F. E SILVA</b><br>
+            <small>Ass. Do Operador</small>
+        </div>
+        <div class="sig-line">
+            <b>WESLAINE ARDISSON E SILVA</b><br>
+            <small>Ass. Do Responsável Operacional</small>
+        </div>
+        <div class="sig-line">
+            <b id="sigCondutorNome">EIDER SANTOS DE CARVALHO</b><br>
+            <small>CPF: <span id="sigCondutorCPF">787.681.872-20</span></small><br>
+            <small>Ass. Do Condutor do veículo</small>
+        </div>
+    </div>
+</div>
+
+<script>
+    const anoAtual = new Date().getFullYear();
+    const numeroInicial = 4293;
+    const registros = [];
+
+    // Gerar 10 registros automáticos sequenciais para simulação
+    for (let i = 0; i < 10; i++) {
+        const seq = (numeroInicial + i).toString().padStart(8, '0');
+        registros.push({
+            num: `MPJ${seq}/${anoAtual}`,
+            razao: i === 0 ? "TRANSPORTADORA CONTATTO LTDA" : `CLIENTE EXAMPLO ${i + 1} LTDA`,
+            equip: (1327041 + i).toString(),
+            placa: i === 0 ? "ELB-7C93" : `ABC-${i}D${i+1}2`,
+            condutor: i === 0 ? "EIDER SANTOS DE CARVALHO" : `MOTORISTA EXEMPLO ${i + 1}`,
+            cpf: i === 0 ? "787.681.872-20" : `000.111.222-0${i}`
+        });
+    }
+
+    // Preencher menu de registros
+    const select = document.getElementById('registroSelect');
+    registros.forEach((reg, index) => {
+        const opt = document.createElement('option');
+        opt.value = index;
+        opt.innerHTML = `Registro ${index + 1} - ${reg.num}`;
+        select.appendChild(opt);
+    });
+
+    // Definir data de hoje por padrão
+    document.getElementById('dataCertificado').valueAsDate = new Date();
+
+    function carregarRegistro(idx) {
+        const r = registros[idx];
+        document.getElementById('numCertificado').innerText = r.num;
+        document.getElementById('razaoSocial').value = r.razao;
+        document.getElementById('numEquipamento').value = r.equip;
+        document.getElementById('placa').value = r.placa;
+        document.getElementById('nomeCondutor').value = r.condutor;
+        document.getElementById('cpfCondutor').value = r.cpf;
+        sincronizarCondutor();
+    }
+
+    function sincronizarCondutor() {
+        const nome = document.getElementById('nomeCondutor').value;
+        const cpf = document.getElementById('cpfCondutor').value;
+        document.getElementById('sigCondutorNome').innerText = nome || "_______________________";
+        document.getElementById('sigCondutorCPF').innerText = cpf || "___.___.___-__";
+    }
+
+    function toggleOutrosField(val) {
+        const outrosInput = document.getElementById('finalidadeOutros');
+        outrosInput.style.display = (val === 'Outros') ? 'inline-block' : 'none';
+    }
+
+    function toggleLacreNum(val) {
+        const lacreDiv = document.getElementById('fieldNumLacre');
+        lacreDiv.style.display = (val === 'Sim') ? 'flex' : 'none';
+    }
+</script>
+</body>
+</html>
